@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multilingual Space Station Assistant</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .language-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .lang-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #1e293b;
+            color: #e2e8f0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .lang-button:hover {
+            background: #334155;
+        }
+
+        .lang-button.active {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .chat-container {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+            height: 500px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .user-message {
+            background: #3b82f6;
+            color: white;
+            margin-left: auto;
+        }
+
+        .bot-message {
+            background: #475569;
+            color: white;
+            margin-right: auto;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #334155;
+            color: white;
+        }
+
+        .message-input::placeholder {
+            color: #94a3b8;
+        }
+
+        .send-button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            background: #3b82f6;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .send-button:hover {
+            background: #2563eb;
+        }
+
+        [dir="rtl"] .user-message {
+            margin-right: auto;
+            margin-left: 0;
+        }
+
+        [dir="rtl"] .bot-message {
+            margin-left: auto;
+            margin-right: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="language-bar" id="languageBar">
+            <button class="lang-button active" data-lang="en">English</button>
+            <button class="lang-button" data-lang="ru">Русский</button>
+            <button class="lang-button" data-lang="he">עברית</button>
+            <button class="lang-button" data-lang="az">Azərbaycan</button>
+            <button class="lang-button" data-lang="es">Español</button>
+            <button class="lang-button" data-lang="ar">العربية</button>
+        </div>
+        <div class="chat-container" id="chatContainer"></div>
+        <div class="input-area">
+            <input type="text" class="message-input" id="messageInput">
+            <button class="send-button" id="sendButton">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const translations = {
+            en: {
+                welcome: "Welcome to the Space Station! How can I help you today?",
+                placeholder: "Type your message here...",
+                send: "Send",
+                responses: {
+                    station: "This is an advanced space research station in Earth's orbit.",
+                    crew: "We can accommodate up to 16 crew members on the station.",
+                    research: "We conduct research on dark matter and space phenomena.",
+                    unknown: "I don't understand that question. Could you rephrase it?"
+                }
+            },
+            ru: {
+                welcome: "Добро пожаловать на космическую станцию! Чем могу помочь?",
+                placeholder: "Введите ваше сообщение...",
+                send: "Отправить",
+                responses: {
+                    station: "Это передовая космическая исследовательская станция на орбите Земли.",
+                    crew: "Станция может разместить до 16 членов экипажа.",
+                    research: "Мы проводим исследования темной материи и космических явлений.",
+                    unknown: "Я не понимаю этот вопрос. Можете переформулировать?"
+                }
+            },
+            he: {
+                welcome: "!ברוכים הבאים לתחנת החלל! כיצד אוכל לעזור",
+                placeholder: "...הקלד את ההודעה שלך כאן",
+                send: "שלח",
+                responses: {
+                    station: "זוהי תחנת מחקר חלל מתקדמת במסלול כדור הארץ.",
+                    crew: "אנחנו יכולים לאכלס עד 16 אנשי צוות בתחנה.",
+                    research: "אנחנו עורכים מחקר על חומר אפל ותופעות חלל.",
+                    unknown: "?אני לא מבין את השאלה הזו. האם תוכל לנסח מחדש"
+                }
+            },
+            az: {
+                welcome: "Kosmik stansiyaya xoş gəldiniz! Sizə necə kömək edə bilərəm?",
+                placeholder: "Mesajınızı buraya yazın...",
+                send: "Göndər",
+                responses: {
+                    station: "Bu, Yer orbitində yerləşən qabaqcıl kosmik tədqiqat stansiyasıdır.",
+                    crew: "Stansiyada 16 ekipaj üzvünə qədər yerləşdirə bilərik.",
+                    research: "Biz qaranlıq materiya və kosmos hadisələri üzərində tədqiqatlar aparırıq.",
+                    unknown: "Bu sualı başa düşmürəm. Yenidən ifadə edə bilərsinizmi?"
+                }
+            },
+            es: {
+                welcome: "¡Bienvenido a la estación espacial! ¿Cómo puedo ayudarte hoy?",
+                placeholder: "Escribe tu mensaje aquí...",
+                send: "Enviar",
+                responses: {
+                    station: "Esta es una estación de investigación espacial avanzada en órbita terrestre.",
+                    crew: "Podemos acomodar hasta 16 miembros de la tripulación en la estación.",
+                    research: "Realizamos investigaciones sobre la materia oscura y los fenómenos espaciales.",
+                    unknown: "No entiendo esa pregunta. ¿Podrías reformularla?"
+                }
+            },
+            ar: {
+                welcome: "مرحباً بك في محطة الفضاء! كيف يمكنني مساعدتك اليوم؟",
+                placeholder: "...اكتب رسالتك هنا",
+                send: "إرسال",
+                responses: {
+                    station: "هذه محطة أبحاث فضائية متقدمة في مدار الأرض.",
+                    crew: "يمكننا استيعاب ما يصل إلى 16 فرداً من طاقم المحطة.",
+                    research: "نجري أبحاثاً حول المادة المظلمة والظواهر الفضائية.",
+                    unknown: "لا أفهم هذا السؤال. هل يمكنك إعادة صياغته؟"
+                }
+            }
+        };
+
+        let currentLanguage = 'en';
+
+        function switchLanguage(lang) {
+            currentLanguage = lang;
+            document.documentElement.dir = ['ar', 'he'].includes(lang) ? 'rtl' : 'ltr';
+            
+            // Update UI elements
+            document.getElementById('messageInput').placeholder = translations[lang].placeholder;
+            document.getElementById('sendButton').textContent = translations[lang].send;
+            
+            // Clear chat and add welcome message
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.innerHTML = '';
+            addMessage(translations[lang].welcome, false);
+
+            // Update active button
+            document.querySelectorAll('.lang-button').forEach(button => {
+                button.classList.remove('active');
+                if (button.dataset.lang === lang) {
+                    button.classList.add('active');
+                }
+            });
+        }
+
+        function addMessage(text, isUser) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+            messageDiv.textContent = text;
+            document.getElementById('chatContainer').appendChild(messageDiv);
+            messageDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function getResponse(text) {
+            const lowerText = text.toLowerCase();
+            const responses = translations[currentLanguage].responses;
+            
+            if (lowerText.includes('station')) return responses.station;
+            if (lowerText.includes('crew')) return responses.crew;
+            if (lowerText.includes('research')) return responses.research;
+            return responses.unknown;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (message) {
+                addMessage(message, true);
+                input.value = '';
+                
+                setTimeout(() => {
+                    const response = getResponse(message);
+                    addMessage(response, false);
+                }, 500);
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('sendButton').addEventListener('click', sendMessage);
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+        document.querySelectorAll('.lang-button').forEach(button => {
+            button.addEventListener('click', () => switchLanguage(button.dataset.lang));
+        });
+
+        // Initialize
+        window.onload = () => {
+            switchLanguage('en');
+            document.getElementById('messageInput').focus();
+        };
+    </script>
+</body>
+</html>
